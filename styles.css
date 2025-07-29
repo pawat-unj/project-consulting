@@ -128,12 +128,43 @@ body {
 
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: row;
+    position: fixed;
+    top: 0;
+    left: 0;
     height: auto;
     width: 100%;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    flex-direction: row;
     justify-content: center;
-    background: transparent;
+    z-index: 1000;
+
+    /* Frosted glass with soft gradient (no hard boundary) */
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.75),
+      rgba(255, 255, 255, 0.45) 35%,
+      rgba(255, 255, 255, 0.15) 100%
+    );
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(12px) saturate(150%);
+
+    /* Remove the sharp border line */
+    border-bottom: none;
+
+    /* Softer shadow to lift it slightly off the content */
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Fallback if blur isn't supported: use a stronger gradient */
+  @supports not ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+    .navbar {
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.92),
+        rgba(255, 255, 255, 0.78) 35%,
+        rgba(255, 255, 255, 0.60) 100%
+      );
+    }
   }
 
   .navbar ul {
@@ -142,9 +173,9 @@ body {
     width: 100%;
   }
 
-  .navbar li {
-    margin: 0;
-  }
+  .navbar li { margin: 0; }
+
+  .navbar a { color: var(--text); }
 }
 /* Make all links bold and remove the underline */
 a {
@@ -172,5 +203,166 @@ a {
 }
 @media (max-width: 600px) {
   .rocket { font-size: 2.2rem; }
+}
+
+/* --- iMessage-style bubbles --- */
+.chat {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 1.25rem;
+}
+
+.avatar {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e5e7eb; /* placeholder background */
+  /* Optional: set your photo here */
+  background-image: url('assets/profile.png'); background-size: cover; background-position: center;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+.imessages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: min(62ch, 100%);
+}
+
+.bubble {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.55;
+  word-wrap: break-word;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+
+.bubble.incoming {
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #eee;
+}
+
+/* iMessage-like tail for incoming bubble (left) */
+.bubble.incoming::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 16px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-right-color: #ffffff;      /* tail color = bubble bg */
+  filter: drop-shadow(-1px 0 0 #eee); /* subtle border on tail */
+}
+
+/* Links inside bubbles inherit your existing link style */
+.bubble a {
+  font-weight: bold; /* your site-wide link style is already bold & black */
+  text-decoration: none;
+}
+
+/* Mobile: allow bubbles to use full width and shrink avatar a bit */
+@media (max-width: 600px) {
+  .avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+  .imessages {
+    max-width: 100%;
+  }
+}
+
+/* --- Chat bubble pop-in sequence --- */
+.imessages .bubble {
+  transition: transform 280ms cubic-bezier(.22,1,.36,1), opacity 220ms ease;
+  transform-origin: 10% 100%;
+  will-change: transform, opacity;
+}
+
+.imessages .bubble.is-hidden {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imessages .bubble { transition: none; }
+}
+
+/* Help section */
+#help .help-lead {
+  margin: 0.1rem 0 0.1rem;
+  font-size: clamp(1rem, 0.6vw + 1rem, 1.125rem);
+  color: #333;
+  max-width: 65ch;
+}
+
+/* Desktop stays a 3-column grid (unchanged) */
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+}
+
+/* Mobile: turn it into a horizontal scroller */
+@media (max-width: 900px) {
+  .help-grid {
+    /* key changes: remove fixed columns & auto-flow as columns */
+    grid-template-columns: none;      /* ← unset the 3 fixed columns */
+    grid-auto-flow: column;           /* build new columns automatically */
+    grid-auto-columns: 75%;           /* each card ~85% of viewport width */
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 1rem;
+    padding: 0.25rem 0.5rem 0.5rem;
+
+    scroll-snap-type: x mandatory;    /* stronger snap, change to proximity if you prefer */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-inline: contain;
+
+    /* hide scrollbars */
+    -ms-overflow-style: none;         /* IE/Edge legacy */
+    scrollbar-width: none;            /* Firefox */
+  }
+
+  .help-grid::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+  .help-card {
+    scroll-snap-align: start;         /* snap each card into view */
+  }
+}
+
+.help-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 1rem 1rem 0.25rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+.help-card .icn { font-size: 1.5rem; margin-bottom: 0.25rem; }
+.help-card h3 { font-size: 1.1rem; margin: 0 0 0.25rem; }
+.help-card ul { padding-left: 1.2rem; margin: 0 0 0.6rem; }
+.help-card li { margin: 0.8rem 0; }
+
+.help-steps {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.2rem;
+  max-width: 65ch;
+}
+.help-steps li { margin: 0.35rem 0; }
+
+.help-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.chip {
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
 }
 

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const WAYPOINT_TIMEOUT_MS = 10000;      // ms
 
   // Launch behavior
-  const AUTO_LAUNCH_DELAY = 5000;         // ms until auto launch
+  const AUTO_LAUNCH_DELAY = 2000;         // ms until auto launch
   const LAUNCH_ACCEL_DURATION = 1000;     // ms to accelerate to SPEED
   const EASE_IN_OUT = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
@@ -277,3 +277,38 @@ document.addEventListener('DOMContentLoaded', () => {
       observer.observe(el);
     });
   });
+
+  // Reveal #who chat bubbles in sequence the first time they enter the viewport
+document.addEventListener('DOMContentLoaded', () => {
+  const whoSection = document.querySelector('#who');
+  if (!whoSection) return;
+
+  const bubbles = whoSection.querySelectorAll('.imessages .bubble');
+  if (!bubbles.length) return;
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Hide initially (no layout shift; just opacity/transform)
+  bubbles.forEach(b => b.classList.add('is-hidden'));
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      if (whoSection.dataset.animated === 'true') break; // run once only
+      whoSection.dataset.animated = 'true';
+
+      if (prefersReduced) {
+        bubbles.forEach(b => b.classList.remove('is-hidden'));
+      } else {
+        bubbles.forEach((b, i) => {
+          setTimeout(() => b.classList.remove('is-hidden'), i * 1200 + 500); // stagger
+        });
+      }
+
+      observer.disconnect();
+      break;
+    }
+  }, { threshold: 0.35 });
+
+  observer.observe(whoSection);
+});
