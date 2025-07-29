@@ -119,7 +119,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .navbar a {
@@ -136,7 +136,7 @@ body {
     padding: 0.75rem 1rem;
     flex-direction: row;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
 
     /* Frosted glass with soft gradient (no hard boundary) */
     background: linear-gradient(
@@ -193,7 +193,7 @@ a {
   touch-action: manipulation;
   cursor: pointer;
   pointer-events: auto; /* clickable before launch; JS disables after launch */
-  z-index: 3000;
+  z-index: 999;
   will-change: transform, filter;
   animation: rocket-glow 2.4s ease-in-out infinite;
 }
@@ -309,32 +309,39 @@ a {
   margin: 1rem 0 1.25rem;
 }
 
-/* Mobile: turn it into a horizontal scroller */
+/* Desktop stays a 3-column grid (keep your current rules) */
+/* .help-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); ... } */
+
+/* Mobile: use a flex row scroller so height grows to tallest card */
 @media (max-width: 900px) {
   .help-grid {
-    /* key changes: remove fixed columns & auto-flow as columns */
-    grid-template-columns: none;      /* ← unset the 3 fixed columns */
-    grid-auto-flow: column;           /* build new columns automatically */
-    grid-auto-columns: 75%;           /* each card ~85% of viewport width */
+    display: flex;                 /* ← switch from grid to flex */
+    flex-wrap: nowrap;
+    align-items: stretch;          /* each card takes the tallest height */
+    gap: 1rem;
 
     overflow-x: auto;
-    overflow-y: hidden;
-    gap: 1rem;
-    padding: 0.25rem 0.5rem 0.5rem;
+    overflow-y: visible;           /* allow full height; no clipping */
+    padding: 0.25rem 0.5rem 0.75rem;
 
-    scroll-snap-type: x mandatory;    /* stronger snap, change to proximity if you prefer */
+    scroll-snap-type: x mandatory; /* strong snap; use `proximity` if you prefer */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-inline: contain;
 
     /* hide scrollbars */
-    -ms-overflow-style: none;         /* IE/Edge legacy */
-    scrollbar-width: none;            /* Firefox */
+    -ms-overflow-style: none;      /* IE/Edge */
+    scrollbar-width: none;         /* Firefox */
   }
+  .help-grid::-webkit-scrollbar { display: none; }
 
-  .help-grid::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
+  /* Fixed card width; adjust the percentage to taste (e.g., 90% or 95%) */
   .help-card {
-    scroll-snap-align: start;         /* snap each card into view */
+    flex: 0 0 88%;
+    max-width: 88%;
+    height: auto;
+    scroll-snap-align: start;
+    display: flex;                 /* optional: makes header + list stretch nicely */
+    flex-direction: column;
   }
 }
 
@@ -366,3 +373,206 @@ a {
   font-size: 0.9rem;
 }
 
+/* --- Contact row layout --- */
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+/* --- Apple Intelligence–style rainbow chip for email --- */
+.email-chip {
+  position: relative;
+  display: inline-flex;
+  --runner-dur: 0.5s;                 /* duration of the dot lap */
+  --glow-delay: var(--runner-dur);  /* start glow after dot finishes */
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem .9rem;
+  border-radius: 99px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--text); 
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  filter: none;
+  /* Gray interior with a subtle color band that hue-rotates */
+  background: linear-gradient(180deg, rgba(248, 248, 248, 0.86));
+  border: 1px solid rgba(237, 237, 237, 0.89);
+  background-clip: padding-box;
+}
+
+.email-chip:hover,
+.email-chip:focus-visible {
+  /* start the existing glow, but delayed */
+  animation-name: siri-glow, siri-hue;
+  animation-duration: 5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-delay: var(--glow-delay);             
+  animation-fill-mode: none;
+
+  /* keep light-mode gray interior + subtle band if desired */
+  filter: hue-rotate(0deg);
+  /* background:
+    linear-gradient(90deg, rgba(255, 120, 200, 0.22), rgba(120, 180, 255, 0.22)),
+    linear-gradient(180deg, rgba(248, 248, 248, 0.86), rgba(237, 237, 237, 0.72)); */
+  background: linear-gradient(180deg, rgba(248, 248, 248, 0.86));
+
+}
+
+/* Runner dot around the pill edge (hidden by default) */
+.email-chip::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  /* soft dot */
+  background: radial-gradient(circle, rgba(210, 210, 210, 0.9) 0 60%, rgba(0,0,0,0) 70%);
+
+  /* Move along the pill perimeter */
+  offset-path: inset(0 round 999px);
+  offset-distance: 0%;
+  offset-rotate: 0deg;
+
+  opacity: 0;                     /* hidden until hover */
+  will-change: offset-distance, opacity;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+  z-index: 1;                     /* above chip surface, below content */
+}
+
+/* base: hidden overlay, no delay on exit */
+.email-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;  /* under text; adjust if needed */
+  background: linear-gradient(90deg, rgba(255,120,200,.22), rgba(120,180,255,.22));
+  opacity: 0;
+  transition: opacity 220ms ease 0s;   /* 0s delay for fade-out */
+}
+
+/* on hover: delay the overlay's fade-in by the runner duration */
+.email-chip:hover::after,
+.email-chip:focus-visible::after {
+  transition-delay: var(--glow-delay); /* waits for the dot */
+  opacity: 1;                          /* fades in after delay */
+}
+
+.email-chip:hover::before,
+.email-chip:focus-visible::before {
+  opacity: 1;                             /* fade dot in */
+  animation: runner var(--runner-dur) linear 1 both;   /* run around once */}
+
+@keyframes runner {
+  0%   { offset-distance: 0%;   opacity: 1; }
+  99%  { offset-distance: 100%; opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+
+@keyframes siri-glow {
+  0%   {
+    box-shadow:
+      0 0 14px 4px rgba(212, 145, 255, 0.30),      /* outer ambient */
+      0 4px 12px rgba(0, 0, 0, 0.06),              /* soft drop */
+      inset 0 0 22px 10px rgba(212, 145, 255, 0.22);/* inner leak */
+  }
+  50%  {
+    box-shadow:
+      0 0 18px 6px rgba(234, 165, 255, 0.45),
+      0 6px 18px rgba(0, 0, 0, 0.07),
+      inset 0 0 30px 14px rgba(234, 165, 255, 0.30);
+  }
+  100% {
+    box-shadow:
+      0 0 14px 4px rgba(212, 145, 255, 0.30),
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      inset 0 0 22px 10px rgba(212, 145, 255, 0.22);
+  }
+}
+
+@keyframes siri-hue {
+  from { filter: hue-rotate(0deg); }
+  to   { filter: hue-rotate(360deg); }
+}
+
+/* Respect reduced‑motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .imessages .bubble { transition: none; }
+  .email-chip { animation: none; }
+  .email-chip::before { animation: none; }
+  .email-chip:hover, .email-chip:focus-visible { animation: none; }
+}
+
+.email-chip.copied::after {
+  content: "Copied!";
+  position: absolute;
+  inset: auto !important;   /* cancel any previous inset */
+  top: 90% !important;
+  left: 80% !important;    /* place to the right of the chip */
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(0.5rem, -50%) !important; /* small gap + vertical center */
+
+  padding: .2rem .5rem;
+  border-radius: .4rem;
+  font-size: .75rem;
+  line-height: 1;
+  background: rgba(0,0,0,.75);
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: chip-toast-side 1200ms ease forwards;
+  z-index: 3;           /* above ::before/::after visuals */
+
+  /* --- override the base .email-chip::after overlay so this acts as a toast --- */
+  width: max-content !important;
+  height: auto !important;
+  border: 0 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+@keyframes chip-toast {
+  0%   { opacity: 0; transform: translate(-50%, .1rem); }
+  15%  { opacity: 1; transform: translate(-50%, .25rem); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, .45rem); }
+}
+@keyframes chip-toast-side {
+  0%   { opacity: 0; transform: translate(0.2rem, -50%); }
+  15%  { opacity: 1; transform: translate(0.5rem, -50%); }
+  85%  { opacity: 1; transform: translate(0.5rem, -50%); }
+  100% { opacity: 0; transform: translate(0.8rem, -50%); }
+}
+
+/* Persistent glow for touch: tap once to start and keep glowing */
+@media (hover: none) {
+  .email-chip.touch-glow {
+    /* same as your hover state, but class-driven */
+    animation-name: siri-glow, siri-hue;
+    animation-duration: 9s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-delay: var(--glow-delay); /* waits for the runner */
+    animation-fill-mode: none;          /* no backwards fill */
+    filter: hue-rotate(0deg);
+    background: linear-gradient(180deg, rgba(248, 248, 248, 0.86));
+  }
+  .email-chip.touch-glow::before {
+    /* run the dot once */
+    opacity: 1;
+    animation: runner var(--runner-dur) linear 1 both;
+  }
+  .email-chip.touch-glow::after {
+    /* show the band after the runner finishes */
+    transition-delay: var(--glow-delay);
+    opacity: 1;
+  }
+}

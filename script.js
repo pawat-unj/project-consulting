@@ -312,3 +312,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
   observer.observe(whoSection);
 });
+// Email chip: single-click/tap copies email; double-click/tap opens default mail app
+// Works for both desktop and touch (mobile). Add CSS for .email-chip.copied if you want a toast.
+document.addEventListener('DOMContentLoaded', () => {
+  const DBL_CLICK_MS = 300;  // desktop double-click window
+  const DBL_TAP_MS   = 320;  // mobile double-tap window
+  const isTouchPrimary = window.matchMedia('(hover: none)').matches;
+
+  function emailFromHref(href) {
+    return href.replace(/^mailto:/, '').split('?')[0];
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  document.querySelectorAll('.email-chip[href^="mailto:"]').forEach(chip => {
+    let singleTimer = null;
+    let lastTapTime = 0;
+    const href = chip.getAttribute('href');
+    const email = emailFromHref(href);
+
+    // Desktop: single-click copies (delayed), double-click opens mail
+    chip.addEventListener('click', (e) => {
+      if (isTouchPrimary) return; // touch handled separately
+      e.preventDefault();         // prevent immediate mailto launch
+      singleTimer = setTimeout(async () => {
+        await copyToClipboard(email);
+        chip.classList.add('copied');
+        setTimeout(() => chip.classList.remove('copied'), 1000);
+        singleTimer = null;
+      }, DBL_CLICK_MS);
+    });
+
+    chip.addEventListener('dblclick', (e) => {
+      if (isTouchPrimary) return;
+      e.preventDefault();
+      if (singleTimer) { clearTimeout(singleTimer); singleTimer = null; }
+      // Open default mail client
+      window.location.href = href;
+    });
+
+    // Mobile/tablet: detect double-tap manually on pointerup
+    chip.addEventListener('pointerup', (e) => {
+      if (!isTouchPrimary || (e.pointerType !== 'touch' && e.pointerType !== 'pen')) return;
+      e.preventDefault(); // stop synthesized click from firing mailto
+
+      const now = e.timeStamp;
+      const delta = now - lastTapTime;
+      const isDoubleTap = lastTapTime && delta > 0 && delta <= DBL_TAP_MS;
+      lastTapTime = now;
+
+      if (isDoubleTap) {
+        // Double-tap: open mail
+        window.location.href = href;
+      } else {
+        // Single-tap: copy
+        copyToClipboard(email).then(() => {
+          chip.classList.add('copied');
+          setTimeout(() => chip.classList.remove('copied'), 1000);
+        });
+      }
+    }, { passive: false });
+  });
+});
+
+// Mobile/tablet: detect double-tap manually on pointerup
+chip.addEventListener('pointerup', (e) => {
+  if (!isTouchPrimary || (e.pointerType !== 'touch' && e.pointerType !== 'pen')) return;
+  e.preventDefault(); // stop synthesized click from firing mailto
+
+  const now = e.timeStamp;
+  const delta = now - lastTapTime;
+  const isDoubleTap = lastTapTime && delta > 0 && delta <= DBL_TAP_MS;
+  lastTapTime = now;
+
+  if (isDoubleTap) {
+    // Double-tap: open mail
+    window.location.href = href;
+  } else {
+    // Single-tap: copy AND start persistent glow
+    copyToClipboard(email).then(() => {
+      chip.classList.add('copied');
+      setTimeout(() => chip.classList.remove('copied'), 1000);
+    });
+    // >>> keep the button glowing after first tap
+    chip.classList.add('touch-glow');
+  }
+}, { passive: false });
