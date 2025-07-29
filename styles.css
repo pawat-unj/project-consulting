@@ -555,23 +555,23 @@ a {
 /* Persistent glow for touch: tap once to start and keep glowing */
 @media (hover: none) {
   .email-chip.touch-glow {
-    /* same as your hover state, but class-driven */
+    /* same visuals as your hover state, but class-driven */
     animation-name: siri-glow, siri-hue;
     animation-duration: 9s;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
-    animation-delay: var(--glow-delay); /* waits for the runner */
-    animation-fill-mode: none;          /* no backwards fill */
+    animation-delay: var(--glow-delay);  /* waits for the runner to finish */
+    animation-fill-mode: none;           /* no backwards fill during delay */
     filter: hue-rotate(0deg);
     background: linear-gradient(180deg, rgba(248, 248, 248, 0.86));
   }
   .email-chip.touch-glow::before {
-    /* run the dot once */
+    /* run the edge dot exactly once */
     opacity: 1;
     animation: runner var(--runner-dur) linear 1 both;
   }
   .email-chip.touch-glow::after {
-    /* show the band after the runner finishes */
+    /* show the color band only after the runner finishes */
     transition-delay: var(--glow-delay);
     opacity: 1;
   }
