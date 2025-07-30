@@ -351,7 +351,8 @@ a {
   .help-card {
     flex: 0 0 88vw;          /* width relative to viewport, not container */
     max-width: 70vw;
-    height: auto;
+    max-height:50vw;
+    /* height: auto; */
     scroll-snap-align: initial;
     display: flex;
     flex-direction: column;
