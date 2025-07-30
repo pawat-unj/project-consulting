@@ -674,3 +674,52 @@ if (t.avatar) {
 
   items.forEach(n => io.observe(n));
 });
+
+// ===== Mobile help-grid: WebKit drag-to-scroll fallback =====
+(function () {
+  const grid = document.querySelector('.help-grid');
+  if (!grid) return;
+
+  const isWebKit = /AppleWebKit/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent);
+  const isSmall  = window.matchMedia('(max-width: 900px)').matches;
+  if (!(isWebKit && isSmall)) return;
+
+  let isDown = false;
+  let startX = 0;
+  let startY = 0;
+  let startScroll = 0;
+
+  function onDown(e) {
+    const p = e.touches ? e.touches[0] : e;
+    isDown = true;
+    startX = p.pageX;
+    startY = p.pageY;
+    startScroll = grid.scrollLeft;
+    grid.classList.add('is-dragging');
+  }
+
+  function onMove(e) {
+    if (!isDown) return;
+    const p = e.touches ? e.touches[0] : e;
+    const dx = p.pageX - startX;
+    const dy = Math.abs(p.pageY - startY);
+    if (e.cancelable && Math.abs(dx) > dy) e.preventDefault(); // assert horizontal intent
+    grid.scrollLeft = startScroll - dx;
+  }
+
+  function onUp() {
+    isDown = false;
+    grid.classList.remove('is-dragging');
+  }
+
+  // Mouse support (desktop Safari small windows)
+  grid.addEventListener('mousedown', onDown);
+  grid.addEventListener('mousemove', onMove);
+  grid.addEventListener('mouseleave', onUp);
+  grid.addEventListener('mouseup', onUp);
+
+  // Touch support (iOS Safari/Chrome)
+  grid.addEventListener('touchstart', onDown, { passive: true });
+  grid.addEventListener('touchmove', onMove, { passive: false });
+  grid.addEventListener('touchend', onUp);
+})();

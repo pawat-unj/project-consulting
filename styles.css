@@ -309,41 +309,46 @@ a {
   margin: 1rem 0 1.25rem;
 }
 
-/* Desktop stays a 3-column grid (keep your current rules) */
-/* .help-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); ... } */
+
 
 /* Mobile: use a flex row scroller so height grows to tallest card */
 @media (max-width: 900px) {
   .help-grid {
-    display: flex;                 /* ← switch from grid to flex */
+    display: flex;
     flex-wrap: nowrap;
-    align-items: stretch;          /* each card takes the tallest height */
+    align-items: stretch;
     gap: 1rem;
 
     overflow-x: auto;
-    overflow-y: visible;           /* allow full height; no clipping */
-    padding: 0.25rem 0.5rem 0.75rem;
-
-    scroll-snap-type: x mandatory; /* strong snap; use `proximity` if you prefer */
+    overflow-y: hidden;          
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pinch-zoom;
+
+    padding: 0.25rem 0.5rem 0.75rem;
+    scroll-snap-type: x proximity;
+
+    overscroll-behavior-x: contain;
     overscroll-behavior-inline: contain;
 
-    /* hide scrollbars */
-    -ms-overflow-style: none;      /* IE/Edge */
-    scrollbar-width: none;         /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    contain: content;      
+    overflow-x: scroll;    
   }
   .help-grid::-webkit-scrollbar { display: none; }
+  .help-grid > * { min-width: 0; }
 
-  /* Fixed card width; adjust the percentage to taste (e.g., 90% or 95%) */
   .help-card {
     flex: 0 0 88%;
     max-width: 88%;
     height: auto;
     scroll-snap-align: start;
-    display: flex;                 /* optional: makes header + list stretch nicely */
+    display: flex;
     flex-direction: column;
   }
 }
+
 
 .help-card {
   background: #fff;
