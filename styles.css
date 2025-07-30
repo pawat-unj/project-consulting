@@ -475,7 +475,10 @@ a {
   align-items: center;
   gap: .6rem;
   flex-wrap: wrap;
+  justify-content: flex-start; /* left-aligns content */
+  text-align: left;            /* optional: ensures inner text aligns left */
 }
+
 
 /* --- Apple Intelligence–style rainbow chip for email --- */
 .email-chip {
