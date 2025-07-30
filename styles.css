@@ -301,6 +301,23 @@ a {
   max-width: 65ch;
 }
 
+/* Help section: allow natural height (avoid 100vh clamp) */
+#help { 
+  height: auto;           /* grow with content */
+  min-height: 0;          /* ensure no inherited min-height */
+  overflow: visible;      /* allow children to expand */
+}
+
+/* If the Help section accidentally has the .fullpage utility, cancel it here */
+#help.fullpage {
+  height: auto !important;     /* remove 100vh cap */
+  min-height: 100vh;           /* optional: still at least screen height */
+  justify-content: initial;    /* stop vertical centering that can clip */
+}
+
+/* Ensure cards can stretch the row height */
+#help .help-grid { align-items: stretch; }
+
 /* Desktop stays a 3-column grid (unchanged) */
 .help-grid {
   display: grid;
@@ -349,10 +366,10 @@ a {
   .help-grid > * { min-width: 0; }
 
   .help-card {
-    flex: 0 0 88vw;          /* width relative to viewport, not container */
+    flex: 0 0 70vw;          /* width relative to viewport, not container */
     max-width: 70vw;
-    max-height:50vw;
-    /* height: auto; */
+    height: auto !important;
+    max-height: none !important;
     scroll-snap-align: initial;
     display: flex;
     flex-direction: column;
