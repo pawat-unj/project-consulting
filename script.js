@@ -409,18 +409,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---- Overlay loader (testimonial.html & sample.html) ----
 document.addEventListener('DOMContentLoaded', () => {
   const overlay  = document.getElementById('overlay');
-  if (!overlay) return;
+  if (!overlay) return; // overlay not present on this page
 
   const panel    = overlay.querySelector('.overlay__panel');
   const iframe   = overlay.querySelector('.overlay__frame');
   const closeBtn = overlay.querySelector('.overlay__close');
-  const backdrop = overlay.querySelector('.overlay__backdrop');
 
   let lastFocused = null;
 
+  // WebKit detection: Safari on macOS/iOS and iOS Chrome/Firefox use WebKit
+  const isWebKit = /AppleWebKit/i.test(navigator.userAgent) && !/Edg/i.test(navigator.userAgent);
+  if (isWebKit) overlay.classList.add('no-blur');
+
   function isOverlayLink(a) {
     if (!a || a.tagName !== 'A') return false;
-    const href = (a.getAttribute('href') || '').replace(/^\.\//, '');
+    if (a.hasAttribute('data-overlay')) return true;
+    const href = (a.getAttribute('href') || '').replace(/^\.\//, '').toLowerCase();
     return href === 'testimonial.html' || href === 'sample.html';
   }
 
@@ -438,18 +442,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return '#overlay';
   }
 
+  function lockScroll(lock) {
+    document.documentElement.style.overflow = lock ? 'hidden' : '';
+    document.body.style.overflow = lock ? 'hidden' : '';
+  }
+
   function openOverlay(url) {
     lastFocused = document.activeElement;
     const label = labelForUrl(url);
     if (panel) panel.setAttribute('aria-label', label);
     if (iframe) {
       iframe.setAttribute('title', label);
-      iframe.src = url; // set before opening to avoid flash
+      iframe.src = url; // set before opening to avoid paint flash
+      // Force layer promotion for safety
+      iframe.style.transform = 'translateZ(0)';
     }
+    lockScroll(true);
     overlay.classList.add('is-open');
-    overlay.removeAttribute('aria-hidden');
-    setTimeout(() => closeBtn && closeBtn.focus(), 0);
-    // Push a history state so Back closes the overlay
+    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(() => { try { closeBtn && closeBtn.focus(); } catch {} }, 0);
     try { history.pushState({ overlay: label }, '', hashForUrl(url)); } catch {}
   }
 
@@ -457,9 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!overlay.classList.contains('is-open')) return;
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden', 'true');
-    // Clear iframe after transition for smoother close
-    setTimeout(() => { if (iframe) iframe.src = ''; }, 280);
-    // Restore focus to the invoking element
+    // Clear iframe after the transition to stop media and free resources
+    setTimeout(() => { if (iframe) iframe.src = 'about:blank'; }, 280);
+    lockScroll(false);
     if (lastFocused && typeof lastFocused.focus === 'function') {
       setTimeout(() => lastFocused.focus(), 0);
     }
@@ -468,13 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Intercept clicks on the overlay links (Samples/Testimonials)
+  // Intercept clicks on overlay-trigger links anywhere in the document
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a');
     if (!isOverlayLink(a)) return;
-    // Allow cmd/ctrl-click to open in a new tab
-    if (e.metaKey || e.ctrlKey) return;
-
+    if (e.metaKey || e.ctrlKey) return; // allow new-tab/window
     e.preventDefault();
     e.stopPropagation();
     openOverlay(a.getAttribute('href'));
@@ -482,7 +491,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Close interactions
   closeBtn && closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeOverlay(); });
-  backdrop && backdrop.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', (e) => {
+    // Click outside the panel closes
+    if (e.target === overlay) closeOverlay();
+  });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlay(); });
 
   // Close on browser back

@@ -635,50 +635,60 @@ a {
   }
 }
 
-/* ---- Overlay (modal) for testimonials ---- */
+/* ---- Modal overlay (Safari-safe) ---- */
 .overlay {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;   /* disabled until opened */
-  opacity: 0;
-  transition: opacity 250ms ease;
+  display: grid;
+  place-items: center;
   z-index: 4000;
-}
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
 
-.overlay__backdrop {
-  position: absolute;
-  inset: 0;
+  /* Single layer backdrop for Chromium; WebKit will disable via .no-blur */
   background: rgba(0, 0, 0, 0.35);
   -webkit-backdrop-filter: blur(6px) saturate(120%);
   backdrop-filter: blur(6px) saturate(120%);
-  opacity: 0;
-  transition: opacity 250ms ease;
 }
 
+/* Disable blur in WebKit to avoid iframe compositing bug */
+.overlay.no-blur {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Open state */
+.overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel */
 .overlay__panel {
   position: relative;
   width: min(900px, 92vw);
-  height: min(80vh, 720px);
+  height: min(80dvh, 720px); /* dynamic vh for iOS */
   background: #ffffff;
   border: 1px solid rgba(0,0,0,0.06);
   border-radius: 16px;
   box-shadow: 0 22px 50px rgba(0,0,0,0.18), 0 8px 22px rgba(0,0,0,0.10);
-  transform: translateY(12px) scale(0.98);
-  transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms ease;
+  transform: translateZ(0);     /* layer promotion helps Safari */
+  will-change: transform, opacity;
   overflow: hidden;
 }
 
+/* Frame fills the panel */
 .overlay__frame {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
   background: #fff;
+  transform: translateZ(0);
 }
 
+/* Close button */
 .overlay__close {
   position: absolute;
   top: 8px;
@@ -687,7 +697,7 @@ a {
   width: 34px;
   border: 1px solid rgba(0,0,0,0.08);
   border-radius: 10px;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.92);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
   backdrop-filter: blur(8px) saturate(140%);
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
@@ -700,22 +710,24 @@ a {
 
 .overlay__close:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.12); }
 
-.overlay.is-open { pointer-events: auto; opacity: 1; }
-.overlay.is-open .overlay__backdrop { opacity: 1; }
-.overlay.is-open .overlay__panel { transform: translateY(0) scale(1); }
-
 @media (max-width: 640px) {
   .overlay__panel {
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* iOS will treat this as dvh due to viewport shenanigans */
     border-radius: 0;
     border: 0;
   }
-  .overlay__close { top: 12px; right: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .overlay, .overlay__backdrop, .overlay__panel { transition: none !important; }
+  .overlay { transition: none !important; }
+}
+
+/* When modal is open, disable navbar blur to help iOS compositor */
+.overlay.is-open ~ .navbar,
+.overlay.is-open .navbar {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 /* =======================
