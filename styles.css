@@ -325,7 +325,7 @@ a {
     touch-action: pan-x pinch-zoom;
 
     padding: 0.25rem 0.5rem 0.75rem;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: none;
 
     overscroll-behavior-x: contain;
     overscroll-behavior-inline: contain;
@@ -343,7 +343,7 @@ a {
     flex: 0 0 88%;
     max-width: 88%;
     height: auto;
-    scroll-snap-align: start;
+    scroll-snap-align: initial;
     display: flex;
     flex-direction: column;
   }
@@ -694,14 +694,15 @@ a {
 }
 
 /* Close button */
+/* Close button (desktop + mobile, notch-safe) */
 .overlay__close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 8px;              /* fallback if env() unsupported */
+  right: 8px;            /* fallback if env() unsupported */
   height: 34px;
   width: 34px;
   border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.92);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
   backdrop-filter: blur(8px) saturate(140%);
@@ -711,6 +712,31 @@ a {
   line-height: 1;
   display: grid;
   place-items: center;
+  z-index: 5;            /* ensure above iframe */
+}
+
+/* Respect iOS safe areas (notch, rounded corners) */
+@supports (top: max(0px)) {
+  .overlay__close {
+    top: max(8px, calc(env(safe-area-inset-top) + 8px));
+    right: max(8px, calc(env(safe-area-inset-right) + 8px));
+  }
+}
+
+/* Larger touch target on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .overlay__close {
+    height: 42px;
+    width: 42px;
+    font-size: 20px;
+    border-radius: 14px;
+  }
+}
+
+/* Accessible focus ring */
+.overlay__close:focus-visible {
+  outline: 2px solid rgba(59,130,246,.6);
+  outline-offset: 2px;
 }
 
 .overlay__close:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.12); }
