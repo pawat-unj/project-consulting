@@ -335,18 +335,32 @@ a {
 
     contain: content;      
     overflow-x: scroll;    
+
+    /* Full-bleed scroller to prevent page overflow on iOS */
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);  /* escape section padding */
+    margin-right: calc(50% - 50vw);
+
+    /* Keep scrollbar space stable and avoid accidental page-wide overflow */
+    scrollbar-gutter: stable both-edges;
   }
   .help-grid::-webkit-scrollbar { display: none; }
   .help-grid > * { min-width: 0; }
 
   .help-card {
-    flex: 0 0 88%;
-    max-width: 88%;
+    flex: 0 0 88vw;          /* width relative to viewport, not container */
+    max-width: 70vw;
     height: auto;
     scroll-snap-align: initial;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;  /* include padding in width */
+    min-width: 0;            /* prevent intrinsic overflow */
+    overflow-wrap: anywhere; /* break overly long words/URLs */
+    word-break: break-word;
   }
+  .help-card * { min-width: 0; }
 }
 
 
