@@ -119,6 +119,8 @@
       <span class="chip">3–5 months</span>
       <span class="chip">No experience needed</span>
       <span class="chip">Any intended STEM major</span>
+    </div>
+    <div class="help-meta safari-hide">
       <a class="chip chip--link" href="./sample.html">Samples →</a>
       <a class="chip chip--link" href="./testimonial.html">Testimonials →</a>
     </div>
@@ -135,10 +137,6 @@
     <p></p>
   </section>
 
-  <!-- <footer>
-    I can't wait to build with you.
-  </footer> -->
-
   <!-- Overlay container for in-page transitions (Testimonials/Samples) -->
   <div id="overlay" class="overlay" aria-hidden="true">
     <div class="overlay__backdrop"></div>
@@ -147,6 +145,15 @@
       <iframe class="overlay__frame" title="Overlay" src="" loading="lazy"></iframe>
     </div>
   </div>
-  <script src="script.js"></script>
 </body>
+<script src="script.js"></script>
+<script>
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) {
+    document.addEventListener("DOMContentLoaded", () => {
+      const elements = document.querySelectorAll('.safari-hide');
+      elements.forEach(el => el.remove());
+    });
+  }
+</script>
 </html>
