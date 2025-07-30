@@ -119,6 +119,8 @@
       <span class="chip">3–5 months</span>
       <span class="chip">No experience needed</span>
       <span class="chip">Any intended STEM major</span>
+      <a class="chip chip--link" href="./sample.html">Samples →</a>
+      <a class="chip chip--link" href="./testimonial.html">Testimonials →</a>
     </div>
   </section>
 
@@ -133,10 +135,18 @@
     <p></p>
   </section>
 
-  <footer>
+  <!-- <footer>
     I can't wait to build with you.
-  </footer>
+  </footer> -->
 
+  <!-- Overlay container for in-page transitions (Testimonials/Samples) -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="overlay__backdrop"></div>
+    <div class="overlay__panel" role="dialog" aria-modal="true" aria-label="Overlay">
+      <button class="overlay__close" aria-label="Close overlay">✕</button>
+      <iframe class="overlay__frame" title="Overlay" src="" loading="lazy"></iframe>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>

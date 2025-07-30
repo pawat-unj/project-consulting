@@ -405,3 +405,260 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   });
 });
+
+// ---- Overlay loader (testimonial.html & sample.html) ----
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay  = document.getElementById('overlay');
+  if (!overlay) return;
+
+  const panel    = overlay.querySelector('.overlay__panel');
+  const iframe   = overlay.querySelector('.overlay__frame');
+  const closeBtn = overlay.querySelector('.overlay__close');
+  const backdrop = overlay.querySelector('.overlay__backdrop');
+
+  let lastFocused = null;
+
+  function isOverlayLink(a) {
+    if (!a || a.tagName !== 'A') return false;
+    const href = (a.getAttribute('href') || '').replace(/^\.\//, '');
+    return href === 'testimonial.html' || href === 'sample.html';
+  }
+
+  function labelForUrl(url) {
+    const u = (url || '').toLowerCase();
+    if (u.includes('testimonial')) return 'Testimonials';
+    if (u.includes('sample')) return 'Samples';
+    return 'Overlay';
+  }
+
+  function hashForUrl(url) {
+    const u = (url || '').toLowerCase();
+    if (u.includes('testimonial')) return '#testimonials';
+    if (u.includes('sample')) return '#samples';
+    return '#overlay';
+  }
+
+  function openOverlay(url) {
+    lastFocused = document.activeElement;
+    const label = labelForUrl(url);
+    if (panel) panel.setAttribute('aria-label', label);
+    if (iframe) {
+      iframe.setAttribute('title', label);
+      iframe.src = url; // set before opening to avoid flash
+    }
+    overlay.classList.add('is-open');
+    overlay.removeAttribute('aria-hidden');
+    setTimeout(() => closeBtn && closeBtn.focus(), 0);
+    // Push a history state so Back closes the overlay
+    try { history.pushState({ overlay: label }, '', hashForUrl(url)); } catch {}
+  }
+
+  function closeOverlay() {
+    if (!overlay.classList.contains('is-open')) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    // Clear iframe after transition for smoother close
+    setTimeout(() => { if (iframe) iframe.src = ''; }, 280);
+    // Restore focus to the invoking element
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      setTimeout(() => lastFocused.focus(), 0);
+    }
+    if (location.hash === '#testimonials' || location.hash === '#samples' || location.hash === '#overlay') {
+      try { history.back(); } catch {}
+    }
+  }
+
+  // Intercept clicks on the overlay links (Samples/Testimonials)
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a');
+    if (!isOverlayLink(a)) return;
+    // Allow cmd/ctrl-click to open in a new tab
+    if (e.metaKey || e.ctrlKey) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    openOverlay(a.getAttribute('href'));
+  });
+
+  // Close interactions
+  closeBtn && closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeOverlay(); });
+  backdrop && backdrop.addEventListener('click', closeOverlay);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOverlay(); });
+
+  // Close on browser back
+  window.addEventListener('popstate', () => {
+    if (overlay.classList.contains('is-open')) closeOverlay();
+  });
+});
+
+// =======================
+// Testimonials page logic
+// =======================
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.body.dataset.page !== 'testimonials') return;
+
+  const stream = document.getElementById('t-stream');
+  if (!stream) return;
+
+  // Sample dataset — edit/expand with real quotes
+  const testimonials = [
+    {
+  
+      semester: "Spring '25",
+      color: 'blue',
+      side: 'left',
+      avatar: 'assets/test1.png',   // ← add this
+      text: `I really like how he always has great examples that make even the toughest concepts easy to get. And he’s great at asking just the right questions to guide you to the answer step by step.`
+    },
+    {
+      semester: "Spring '25",
+      color: 'emerald',
+      side: 'right',
+      avatar: 'assets/test2.png',  
+      text: `Ice is very aware when students are struggling, and he helps out a lot for people who are in tough situations.`
+    },
+    {
+      semester: "Fall '24",
+      color: 'amber',
+      side: 'left',
+      avatar: 'assets/test3.png', 
+      text: `Very friendly and always welcoming for questions.`
+    },
+    {
+      semester: "Spring '25",
+      color: 'violet',
+      side: 'right',
+      avatar: 'assets/test4.png', 
+      text: `..The explanations were very clear, and I was able to clarify the things that I did not fully understand from lecture during Ice's discussion.`
+    },
+    {
+      semester: "Fall '24",
+      color: 'rose',
+      side: 'left',
+      avatar: 'assets/test5.png', 
+      text: `..super engaging discussion sections and always well prepared to answer any questions..`
+    },
+    {
+      semester: "Spring '24",
+      color: 'blue',
+      side: 'right',
+      avatar: 'assets/test6.png', 
+      text: `Ice is great at teaching. He's the reason I won't fail this class :)`
+    },
+    {
+      semester: "Spring '24",
+      color: 'blue',
+      side: 'left',
+      avatar: 'assets/test7.png', 
+      text: `He knows the subject well and is helpful during and after discussions. Great lecturing and really helpful during office hours.`
+    },
+    {
+      semester: "Fall '24",
+      color: 'blue',
+      side: 'right',
+      avatar: 'assets/test8.png', 
+      text: `..Always a packed class because he was the best at articularing and summarizing the content that was applicable..`
+    }
+
+  ];
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+
+  function makeItem(t) {
+    const item = el('article', `t-item t-${t.side || 'left'} t-reveal`);
+  
+    const avatar = el('div', 't-avatar');
+avatar.dataset.color = t.color || 'blue';
+
+if (t.avatar) {
+  const img = document.createElement('img');
+  img.className = 't-avatar-img';
+  img.src = t.avatar;
+  img.alt = 'Student avatar';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  // Fallback: if image fails, remove it so the colored circle shows
+  img.addEventListener('error', () => img.remove(), { once: true });
+  avatar.appendChild(img);
+} else {
+  avatar.textContent = ''; // anonymous, color-only avatar
+}
+  
+    const bubble = el('div', 't-bubble');
+  
+    const text = el('div');
+    // Preserve line breaks in testimonial text
+    (t.text || '').split('\n').forEach((line, i, arr) => {
+      text.appendChild(document.createTextNode(line));
+      if (i < arr.length - 1) text.appendChild(document.createElement('br'));
+    });
+  
+    const semester = el('div', 't-semester', t.semester || '');
+  
+    bubble.appendChild(text);
+    if (t.semester) bubble.appendChild(semester);
+  
+    item.appendChild(avatar);
+    item.appendChild(bubble);
+    return item;
+  }
+
+  // Render
+  testimonials.forEach(t => stream.appendChild(makeItem(t)));
+
+  // Reveal on scroll (staggered: one at a time, top→bottom, each delayed 1000ms)
+  const REVEAL_DELAY_MS = 700;
+  const items = Array.from(stream.querySelectorAll('.t-reveal'));
+  const inView = new Array(items.length).fill(false);
+  let nextIdx = 0;        // next item index to reveal (DOM order)
+  let busyIdx = -1;       // index currently scheduled (or -1 if none)
+  let timerId = null;     // pending timer for the scheduled reveal
+
+  function clearTimer() {
+    if (timerId) { clearTimeout(timerId); timerId = null; }
+  }
+
+  function schedule(i) {
+    busyIdx = i;
+    timerId = setTimeout(() => {
+      items[i].classList.add('is-in'); // trigger CSS transition
+      io.unobserve(items[i]);          // no longer need to observe
+      busyIdx = -1;
+      timerId = null;
+      nextIdx = i + 1;                 // move to the next item in DOM order
+      tryRevealQueue();
+    }, REVEAL_DELAY_MS);
+  }
+
+  function tryRevealQueue() {
+    // Skip over any already-revealed items
+    while (nextIdx < items.length && items[nextIdx].classList.contains('is-in')) {
+      nextIdx++;
+    }
+    if (busyIdx !== -1) return;               // already scheduling one
+    if (nextIdx >= items.length) return;      // done
+    if (inView[nextIdx]) schedule(nextIdx);   // only schedule when the next item is in view
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      const idx = items.indexOf(en.target);
+      if (idx === -1) return;
+      inView[idx] = en.isIntersecting;
+
+      // If the currently scheduled item leaves view, cancel its timer
+      if (!en.isIntersecting && idx === busyIdx) {
+        clearTimer();
+        busyIdx = -1;
+      }
+    });
+    tryRevealQueue();
+  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+
+  items.forEach(n => io.observe(n));
+});

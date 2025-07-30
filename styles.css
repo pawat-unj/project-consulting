@@ -373,6 +373,64 @@ a {
   font-size: 0.9rem;
 }
 
+/* Clickable chip variant */
+.chip--link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+
+  cursor: pointer;
+  text-decoration: none;
+  color: #0f172a;              /* dark text for contrast */
+  font-weight: 400;            /* unbold (override global a{font-weight:bold}) */
+
+  /* Hero-like light blue styling */
+  background: #f1f7ff; /* solid hero light blue */
+  border-color: #bfdbfe;       /* ~blue-200 */
+
+  /* Smooth, subtle transitions */
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 80ms ease,
+    color 180ms ease;
+}
+ 
+/* Hover: gentle lift + slightly deeper blue */
+.chip--link:hover {
+  background: #bfdbfe; /* slightly deeper blue for hover */
+  border-color: #93c5fd;       /* ~blue-300 */
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+ 
+/* Keyboard focus: clear, accessible ring */
+.chip--link:focus-visible {
+  outline: 2px solid rgba(59,130,246,.6); /* blue-500 ring */
+  outline-offset: 2px;
+  background: #bfdbfe; /* match hover for clear focus state */
+  border-color: #93c5fd;
+}
+ 
+/* Active/pressed: tiny depress effect */
+.chip--link:active {
+  transform: translateY(1px);
+  background: #c5dbff; /* pressed state */
+  border-color: #90befc;
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+}
+ 
+/* Optional: disabled look via aria-disabled */
+.chip--link[aria-disabled="true"] {
+  opacity: .55;
+  pointer-events: none;
+}
+ 
+/* Optional: higher contrast users */
+@media (prefers-contrast: more) {
+  .chip--link:focus-visible { outline-width: 3px; }
+}
+
 /* --- Contact row layout --- */
 .contact-row {
   display: flex;
@@ -557,7 +615,7 @@ a {
   .email-chip.touch-glow {
     /* same visuals as your hover state, but class-driven */
     animation-name: siri-glow, siri-hue;
-    animation-duration: 9s;
+    animation-duration: 5s;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
     animation-delay: var(--glow-delay);  /* waits for the runner to finish */
@@ -575,4 +633,257 @@ a {
     transition-delay: var(--glow-delay);
     opacity: 1;
   }
+}
+
+/* ---- Overlay (modal) for testimonials ---- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;   /* disabled until opened */
+  opacity: 0;
+  transition: opacity 250ms ease;
+  z-index: 4000;
+}
+
+.overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.overlay__panel {
+  position: relative;
+  width: min(900px, 92vw);
+  height: min(80vh, 720px);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 16px;
+  box-shadow: 0 22px 50px rgba(0,0,0,0.18), 0 8px 22px rgba(0,0,0,0.10);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms ease;
+  overflow: hidden;
+}
+
+.overlay__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.overlay__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  height: 34px;
+  width: 34px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.85);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.overlay__close:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.12); }
+
+.overlay.is-open { pointer-events: auto; opacity: 1; }
+.overlay.is-open .overlay__backdrop { opacity: 1; }
+.overlay.is-open .overlay__panel { transform: translateY(0) scale(1); }
+
+@media (max-width: 640px) {
+  .overlay__panel {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: 0;
+  }
+  .overlay__close { top: 12px; right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .overlay__backdrop, .overlay__panel { transition: none !important; }
+}
+
+/* =======================
+   Testimonials (iMessage style)
+   ======================= */
+   .t-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 18px 44px;
+  }
+  .t-header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .t-header h1 {
+    font-size: clamp(1.4rem, 1.2rem + 1.2vw, 2rem);
+    line-height: 1.15;
+    margin: 0;
+  }
+  .t-subtitle {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    color: #6b7280;
+  }
+  
+  .t-stream {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .t-item {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    grid-template-areas: 'avatar bubble';
+    column-gap: 10px;
+    align-items: start;
+    will-change: transform, opacity;
+  }
+  .t-item.t-right {
+    grid-template-columns: 1fr 42px;
+    grid-template-areas: 'bubble avatar';
+  }
+
+  /* Pin grid areas so avatars/bubbles align perfectly on both sides */
+  .t-avatar { grid-area: avatar; align-self: start; justify-self: start; }
+  .t-bubble { grid-area: bubble; align-self: start; }
+  /* On right-side items, keep the bubble hugged to the avatar with the same gap */
+  .t-item.t-right .t-bubble { justify-self: end; }
+  
+  /* Avatar circle with initials */
+  .t-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0f172a;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: linear-gradient(180deg, #ffffff, #f3f4f6);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    user-select: none;
+  }
+  .t-avatar[data-color="blue"]   { background: #e0f2fe; color:#0f172a; }
+  .t-avatar[data-color="rose"]   { background: #ffe4e6; color:#111827; }
+  .t-avatar[data-color="emerald"]{ background: #d1fae5; color:#064e3b; }
+  .t-avatar[data-color="amber"]  { background: #fef3c7; color:#111827; }
+  .t-avatar[data-color="violet"] { background: #ede9fe; color:#312e81; }
+  
+  /* Bubble */
+  .t-bubble {
+    position: relative;
+    display: inline-block;
+    max-width: min(90%, 640px);
+    padding: 10px 12px;
+    border-radius: 18px;
+    border: none;                  /* iMessage has no visible border */
+    background: #E5E5EA;          /* iMessage incoming gray */
+    color: #000;                   /* iMessage text on gray */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06); /* soft lift */
+    line-height: 1.35;
+  }
+  .t-item.t-right .t-bubble {
+    background: #0A84FF;   /* iOS system blue (iMessage) */
+    color: #fff;           /* white text on blue */
+    border: none;          /* no border */
+  }
+
+  /* Semester label under the bubble text */
+  .t-semester {
+    margin-top: 6px;
+    font-size: 0.80rem;
+    color: #6e6e73; /* Apple gray text tone on light bubble */
+  }
+  .t-item.t-right .t-semester { color: rgba(255,255,255,0.85); }
+  
+  /* Links inside testimonial bubbles inherit text color */
+  .t-bubble a { color: inherit; }
+  .t-item.t-right .t-bubble a { color: #fff; }
+  
+  /* Reveal animation */
+  .t-reveal {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  .t-reveal.is-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: transform 360ms cubic-bezier(.22,1,.36,1), opacity 360ms ease;
+  }
+
+  /* Image avatar support for testimonials */
+  .t-avatar { overflow: hidden; }
+  .t-avatar-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .t-reveal,
+    .t-reveal.is-in { transform: none !important; opacity: 1 !important; transition: none !important; }
+  }
+/* Testimonials page: make the local header pure white (override global header gradient) */
+body[data-page="testimonials"] .t-header {
+  background: var(--bg); /* match the app’s off‑white */
+  background-image: none;
+  padding-block: 6px 8px; /* reduce top/bottom padding around the header */
+  margin-bottom: 6px;     /* slightly tighter space before the stream */
+}
+/* Testimonials page: tighter header spacing */
+body[data-page="testimonials"] .t-wrap {
+  padding-top: 80px;   /* was 28px */
+  padding-bottom: 28px;/* was 44px */
+}
+
+/* Stylish tagline under the testimonials header */
+.t-tagline {
+  margin: 6px auto 0;
+  max-width: 50ch;
+  text-align: center;
+  font-weight: 400;
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
+  letter-spacing: 0.2px;
+  background: linear-gradient(90deg, #ef5da8 0%, #7c3aed 45%, #3b82f6 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.6));
+  opacity: 0;
+  transform: translateY(6px);
+  animation: t-tagline-in 600ms cubic-bezier(.22,1,.36,1) 120ms forwards;
+}
+@keyframes t-tagline-in { to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-tagline { animation: none; opacity: 1; transform: none; }
+}
+
+.coming-soon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh; /* Full viewport height */
+  font-size: 1rem;
+  font-weight: normal;
+  text-align: center;
 }
