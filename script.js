@@ -531,14 +531,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       semester: "Fall '24",
-      color: 'amber',
+      color: 'violet',
       side: 'left',
       avatar: 'assets/test3.png', 
       text: `Very friendly and always welcoming for questions.`
     },
     {
       semester: "Spring '25",
-      color: 'violet',
+      color: 'yellow',
       side: 'right',
       avatar: 'assets/test4.png', 
       text: `..The explanations were very clear, and I was able to clarify the things that I did not fully understand from lecture during Ice's discussion.`
@@ -559,14 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     {
       semester: "Spring '24",
-      color: 'blue',
+      color: 'brown',
       side: 'left',
       avatar: 'assets/test7.png', 
       text: `He knows the subject well and is helpful during and after discussions. Great lecturing and really helpful during office hours.`
     },
     {
       semester: "Fall '24",
-      color: 'blue',
+      color: 'black',
       side: 'right',
       avatar: 'assets/test8.png', 
       text: `..Always a packed class because he was the best at articularing and summarizing the content that was applicable..`
@@ -722,4 +722,131 @@ if (t.avatar) {
   grid.addEventListener('touchstart', onDown, { passive: true });
   grid.addEventListener('touchmove', onMove, { passive: false });
   grid.addEventListener('touchend', onUp);
+})();
+
+// ===== Samples page: render 2-row horizontal circular scroller =====
+(function () {
+  const page = document.body && document.body.getAttribute('data-page');
+  if (page !== 'samples') return;
+
+  const scroller = document.getElementById('samplesScroller');
+  const track    = document.getElementById('samplesTrack');
+  if (!scroller || !track) return;
+
+  // TODO: Replace placeholder images with real assets when ready
+  const PROJECTS = [
+    { id: 'photo-nas',      name: 'NAS on a Home Server',                       desc: 'Drag-and-drop cloud storage with shareable links for your photography.',           img: 'assets/nas.png' },
+    { id: 'habit-tracker',  name: 'Custom Flashcard Web App',                   desc: 'Flashcard system to identify your weak areas and reinforce them.',                       img: 'assets/flashcard.png' },
+    { id: 'finance-import', name: 'Personal Finance Analytics',                 desc: 'Collecting, analyzing, and visualizing your spending.',                           img: 'assets/finance.png' },
+    { id: 'tactile-viz',    name: 'Nutrition Analyzer',                         desc: 'Database-backed app to input meals, analyze nutrients, and show patterns.',                         img: 'assets/nutrition.png' },
+    { id: 'bpa-mesher',     name: 'Hide-and-seek game',                         desc: 'Interactive Point Cloud to Mesh Surface Reconstruction PvP game.',                  img: 'assets/BPA.png' },
+    { id: 'cv-plant',       name: 'Interactive Coral Restoration Tracker',      desc: 'Visualizing coral planting sites and growth updates using Google Earth.',   img: 'assets/coral.png' },
+    { id: 'resource-finder',     name: 'Local Resource Finder',                 desc: 'Helping people find nearby food banks, recycling centers, or mutual aid groups.',                  img: 'assets/map.png' },
+    { id: 'cv-plant',       name: 'Music Mood Classifier',                      desc: 'Classifying music files into mood categories based on tempo and key using ML.',   img: 'assets/music.png' }
+  ];
+
+  function makeCard(p) {
+    const card = document.createElement('article');
+    card.className = 'sample-card';
+    card.setAttribute('data-id', p.id);
+
+    const img = document.createElement('img');
+    img.className = 'sample-card__img';
+    img.alt = p.name;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = p.img;
+
+    const body = document.createElement('div');
+    body.className = 'sample-card__body';
+
+    const name = document.createElement('h3');
+    name.className = 'sample-card__name';
+    name.textContent = p.name;
+
+    const desc = document.createElement('p');
+    desc.className = 'sample-card__desc';
+    desc.textContent = p.desc;
+
+    body.appendChild(name);
+    body.appendChild(desc);
+    card.appendChild(img);
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderCards(list) {
+    const frag = document.createDocumentFragment();
+    list.forEach(p => frag.appendChild(makeCard(p)));
+    return frag;
+  }
+
+  // Build 3 copies for seamless circular scroll
+  function buildTrack() {
+    track.innerHTML = '';
+    track.appendChild(renderCards(PROJECTS));
+    track.appendChild(renderCards(PROJECTS));
+    track.appendChild(renderCards(PROJECTS));
+  }
+
+  let baseWidth = 0; // width of one sequence of projects
+
+  function measureBaseWidth() {
+    // Total scrollWidth divided by number of copies (3)
+    const total = track.scrollWidth;
+    baseWidth = Math.round(total / 3);
+  }
+
+  function centerOnMiddle() {
+    scroller.scrollLeft = baseWidth; // start at the middle copy
+  }
+
+  function onScrollLoop() {
+    const x = scroller.scrollLeft;
+    // If user scrolls past 1.5x width, jump back by one baseWidth; if before 0.5x, jump forward
+    if (x > baseWidth * 1.5) {
+      scroller.scrollLeft = x - baseWidth;
+    } else if (x < baseWidth * 0.5) {
+      scroller.scrollLeft = x + baseWidth;
+    }
+  }
+
+  // Map vertical trackpad scroll to horizontal to improve desktop UX
+  function onWheel(e) {
+    if (scroller.scrollWidth <= scroller.clientWidth + 1) return; // no overflow
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      scroller.scrollLeft += e.deltaY;
+      if (e.cancelable) e.preventDefault();
+    }
+  }
+
+  function init() {
+    buildTrack();
+
+    // After images load, measure precisely
+    const imgs = Array.from(track.querySelectorAll('img'));
+    let pending = imgs.length;
+    function done() {
+      measureBaseWidth();
+      centerOnMiddle();
+    }
+    if (!pending) { done(); }
+    imgs.forEach(img => {
+      if (img.complete) { if (--pending === 0) done(); }
+      else img.addEventListener('load', () => { if (--pending === 0) done(); });
+      img.addEventListener('error', () => { if (--pending === 0) done(); });
+    });
+
+    scroller.addEventListener('scroll', onScrollLoop, { passive: true });
+    scroller.addEventListener('wheel', onWheel, { passive: false });
+
+    window.addEventListener('resize', () => {
+      // Keep relative position inside the middle copy
+      const rel = scroller.scrollLeft - baseWidth; // position within middle
+      measureBaseWidth();
+      scroller.scrollLeft = baseWidth + Math.max(0, Math.min(rel, baseWidth));
+    });
+  }
+
+  init();
 })();

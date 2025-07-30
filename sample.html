@@ -3,18 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Student Testimonials</title>
+  <title>Sample Projects</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="testimonials">
+<body data-page="samples">
   <main class="t-wrap">
     <header class="t-header">
       <h1>Sample Projects</h1>
       <p class="t-tagline">Big ideas to get you started.</p>
     </header>
-    
-    <div class="coming-soon">Coming Soon..</div>
-    
+
+    <section class="samples" aria-labelledby="samples-heading">
+      <h2 id="samples-heading" class="visually-hidden">Samples</h2>
+      <div class="samples-scroller" id="samplesScroller" aria-label="Sample projects" role="region">
+        <div class="samples-track" id="samplesTrack" aria-live="polite"></div>
+      </div>
+    </section>
   </main>
 
   <script src="script.js"></script>
