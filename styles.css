@@ -469,6 +469,38 @@ a {
   .chip--link:focus-visible { outline-width: 3px; }
 }
 
+/* === Hero "Learn more" chip tweaks === */
+/* Place the chip under the tagline and center it */
+header .learn-more {
+  display: inline-flex;          /* ensure vertical centering of text/arrow */
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto 0;           /* space above, centered */
+  padding: 0.5rem 0.9rem;        /* slightly larger tap target */
+  font-size: 0.95rem;            /* a hair larger for hero */
+  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.00); /* soft blue-ish lift on hero */
+}
+
+/* Make hover a touch more lively in the hero */
+header .learn-more:hover {
+  transform: translateY(-1px);   /* subtle lift on hover */
+  box-shadow: 0 10px 28px rgba(30, 64, 175, 0.12);
+}
+
+/* Keep a crisp focus ring for accessibility */
+header .learn-more:focus-visible {
+  outline: 2px solid rgba(59,130,246,.7);
+  outline-offset: 3px;
+}
+
+/* Slightly smaller on very small screens */
+@media (max-width: 420px) {
+  header .learn-more {
+    font-size: 0.9rem;
+    padding: 0.48rem 0.82rem;
+  }
+}
+
 /* --- Contact row layout --- */
 .contact-row {
   display: flex;
